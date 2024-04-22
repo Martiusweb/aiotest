@@ -430,8 +430,7 @@ class _AwaitEvent:
         self._mock = mock
         self._condition = None
 
-    @asyncio.coroutine
-    def wait(self, skip=0):
+    async def wait(self, skip=0):
         """
         Wait for await.
 
@@ -442,10 +441,9 @@ class _AwaitEvent:
         def predicate(mock):
             return mock.await_count > skip
 
-        return (yield from self.wait_for(predicate))
+        return await self.wait_for(predicate)
 
-    @asyncio.coroutine
-    def wait_next(self, skip=0):
+    async def wait_next(self, skip=0):
         """
         Wait for the next await.
 
@@ -462,10 +460,9 @@ class _AwaitEvent:
         def predicate(mock):
             return mock.await_count > await_count + skip
 
-        return (yield from self.wait_for(predicate))
+        return await self.wait_for(predicate)
 
-    @asyncio.coroutine
-    def wait_for(self, predicate):
+    async def wait_for(self, predicate):
         """
         Wait for a given predicate to become True.
 
@@ -476,21 +473,20 @@ class _AwaitEvent:
         condition = self._get_condition()
 
         try:
-            yield from condition.acquire()
+            await condition.acquire()
 
             def _predicate():
                 return predicate(self._mock)
 
-            return (yield from condition.wait_for(_predicate))
+            return await condition.wait_for(_predicate)
         finally:
             condition.release()
 
-    @asyncio.coroutine
-    def _notify(self):
+    async def _notify(self):
         condition = self._get_condition()
 
         try:
-            yield from condition.acquire()
+            await condition.acquire()
             condition.notify_all()
         finally:
             condition.release()
